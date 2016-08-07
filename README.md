@@ -6,12 +6,7 @@
 
 These playbooks (found in sample_yml) deploy a simple all-in-one configuration
 of the popular Drupal software platform and CMS, frontend by the Nginx web server
-and the PHP-FPM process manager. To use with vagrant:
-
-    ansible-galaxy install -r provisioning/requirements.yml
-    cp sample_yml/site.example.yml site.yml
-    edit site.yml
-    vagrant up
+and the PHP-FPM process manager.
 
 The playbooks will configure MySQL, Drupal, Nginx, and PHP-FPM. When the run
 is complete, you can access server (http://192.168.88.88/) to begin the Drupal
