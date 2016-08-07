@@ -1,0 +1,94 @@
+---
+- group_by: key={{ ansible_os_family }}
+
+- name: make sure the ssh user is part of users
+  user: name={{ ansible_ssh_user }} groups=users,{{ www_user }} append=yes
+  when: ansible_ssh_user != 'root'
+  
+- name: make sure the vhosts directory exists (ignore chgrp errors on vagrant)
+  file: path=/var/www/vhosts/{{ item.key }} state=directory mode=2775 owner={{ ansible_ssh_user }} group=users
+  with_dict: sites
+  ignore_errors: true
+
+- name: Clone the code from repository
+  git: repo={{ item.value.git }} dest=/var/www/vhosts/{{ item.key }}/drupal version={{ item.value.version }} accept_hostkey=yes
+  with_dict: sites
+  sudo: no
+
+- name: Create files folder (ignore chgrp errors on vagrant)
+  file: path=/var/www/vhosts/{{ item.key }}/drupal/sites/default/files state=directory mode=2775 owner={{ ansible_ssh_user }} group={{ www_user }} recurse=yes
+  with_dict: sites
+  ignore_errors: true
+
+- name: Create cache folder (boost) (ignore chgrp errors on vagrant)
+  file: path=/var/www/vhosts/{{ item.key }}/drupal/cache state=directory mode=2775 owner={{ ansible_ssh_user }} group={{ www_user }} recurse=yes
+  with_dict: sites
+  ignore_errors: true
+
+- name: Copy default.settings.php file
+  shell: cp /var/www/vhosts/{{ item.key }}/drupal/sites/default/default.settings.php /var/www/vhosts/{{ item.key }}/drupal/sites/default/settings.php
+    creates=/var/www/vhosts/{{ item.key }}/drupal/sites/default/settings.php
+  with_dict: sites
+
+- name: Set permissions for settings.php (ignore chgrp errors on vagrant)
+  shell: chown {{ ansible_ssh_user }}:{{ www_user }} /var/www/vhosts/{{ item.key }}/drupal/sites/default/settings.php && chmod 664 /var/www/vhosts/{{ item.key }}/drupal/sites/default/settings.php
+    creates=/var/www/vhosts/{{ item.key }}/drupal/sites/default/settings.php
+  with_dict: sites
+  ignore_errors: true
+
+- name: Run command 'composer install' at DocRoot
+  shell: cd /var/www/vhosts/{{ item.key }}/drupal/ && composer install
+  with_dict: sites
+  ignore_errors: true
+
+- name: Chmod 77 settings.php
+  shell: chmod 777 /var/www/vhosts/{{ item.key }}/drupal/sites/default/settings.php
+  with_dict: sites
+  ignore_errors: true
+
+- name: Create nginx configuration file for drupal sites with boost
+  template: src=drupal.conf dest=/etc/nginx/drupal.conf
+
+- name: Create nginx configuration file for drupal sites with microcache
+  template: src=drupal_microcaching.conf dest=/etc/nginx/drupal_microcaching.conf
+
+- name: Create nginx map file used in microcaching
+  template: src=fastcgi_microcache_zone.conf dest=/etc/nginx/conf.d/fastcgi_microcache_zone.conf
+
+- name: Create nginx-ssl.conf
+  template: src=nginx-ssl.conf dest=/etc/nginx/nginx-ssl.conf
+
+- name: make sure the nginx ssl directory exists
+  file: path=/etc/nginx/ssl state=directory
+
+- name: Create a new private key
+  shell: umask 077 && openssl genrsa -out /etc/nginx/ssl/ssl_private_key.pem 2048
+    creates=/etc/nginx/ssl/ssl_private_key.pem
+
+- name: Generate Diffie-Hellman cipher bits used for Perfect Forward Secrecy
+  shell: umask 077 && openssl dhparam -out /etc/nginx/ssl/dh2048.pem 2048
+    creates=/etc/nginx/ssl/dh2048.pem
+
+- name: Create a certificate signing request
+  shell: umask 007 && openssl req -new -key /etc/nginx/ssl/ssl_private_key.pem -out /etc/nginx/ssl/{{ item.key }}.csr -sha256 -subj "/C=/ST=/L=/O=/CN={{ item.key }}"
+    creates=/etc/nginx/ssl/{{ item.key }}.csr
+  with_dict: sites
+  when: item.value.ssl is defined
+
+- name: Create a SSL certificate by self-signing
+  shell: umask 007 && openssl x509 -req -days 365 -in /etc/nginx/ssl/{{ item.key }}.csr -signkey /etc/nginx/ssl/ssl_private_key.pem -out /etc/nginx/ssl/{{ item.key }}.pem
+    creates=/etc/nginx/ssl/{{ item.key }}.pem
+  with_dict: sites
+  when: item.value.ssl is defined
+
+- name: Create sites configurations (ssl)
+  template: src=ssl.conf dest=/etc/nginx/{{ nginx_conf_dir }}/{{ item.key }}.conf
+  with_dict: sites
+  notify: restart nginx
+  when: item.value.ssl is defined
+
+- name: Create sites configurations (non ssl)
+  template: src=default.conf dest=/etc/nginx/{{ nginx_conf_dir }}/{{ item.key }}.conf
+  with_dict: sites
+  notify: restart nginx
+  when: item.value.ssl is not defined

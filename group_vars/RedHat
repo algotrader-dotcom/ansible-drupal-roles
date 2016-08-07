@@ -1,0 +1,12 @@
+mysql_pid: /var/lib/mysql/localhost.pid
+mysql_socket: /var/lib/mysql/mysql.sock
+mysql_conf_d: /etc/my.cnf.d/
+my_cnf_dest: /etc/my.cnf
+
+php_fpm_daemon: php-fpm
+php_ini_dest: /etc/php.ini
+php_fpm_conf: /etc/php-fpm.d/www.conf
+
+www_user: nginx
+
+nginx_conf_dir: conf.d

@@ -1,0 +1,6 @@
+[localhost]
+127.0.0.1 ansible_ssh_port=22 ansible_ssh_user=root ansible_ssh_pass=khoican123
+
+[aws-ec2]
+52.59.101.186 ansible_ssh_port=22 ansible_ssh_user=root ansible_ssh_pass=khoican123
+

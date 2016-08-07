@@ -1,0 +1,50 @@
+---
+- group_by: key={{ ansible_os_family }}
+
+- name: Run apt-get update (Ubuntu)
+  apt: update_cache=yes
+  when: ansible_os_family == 'Debian'
+
+- name: Install Common packages (Ubuntu)
+  apt: name={{ item }}
+  with_items:
+    - fish
+    - git
+    - tig
+    - htop
+    - iotop
+    - fail2ban
+    - curl
+    - vim
+    - emacs24-nox
+    - byobu
+    - multitail
+  when: ansible_os_family == 'Debian'
+
+- name: Install Common packages (CentOS)
+  yum: name={{ item }}
+  with_items:
+    - epel-release
+    - git
+    - tig
+    - htop
+    - iotop
+    - fail2ban
+    - curl
+    - vim
+    - byobu
+    - multitail
+    - libselinux-python
+    - libsemanage-python
+  when: ansible_os_family == 'RedHat'
+
+- name: Install fish (CentOS)
+  yum: name=http://fishshell.com/files/2.1.0/linux/RedHat_RHEL-6/fish-2.1.0-2.1.x86_64.rpm
+  when: ansible_os_family == 'RedHat'
+
+- name: set up .vimrc for root
+  get_url: url=https://gist.githubusercontent.com/jackbravo/7163461/raw/.vimrc dest=/root/.vimrc
+
+- name: set up .vimrc for user
+  get_url: url=https://gist.githubusercontent.com/jackbravo/7163461/raw/.vimrc dest=~/.vimrc
+  sudo: no
