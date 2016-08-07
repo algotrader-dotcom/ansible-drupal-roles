@@ -1,8 +1,7 @@
 # Drupal+Nginx+PHP-FPM Deployment
-This ansible repo is derived & improved from https://github.com/axai-mx/ansible-drupal-roles
+This ansible repo is derived & fixed mysql roles from https://github.com/axai-mx/ansible-drupal-roles
 - Requires Ansible 1.8 or newer
 - Expects Ubuntu 14.04 or CentOS/RedHat 6.5 hosts
-- If using vagrant with ubuntu you need to `apt-get install nfs-kernel-server`
 
 These playbooks (found in sample_yml) deploy a simple all-in-one configuration
 of the popular Drupal software platform and CMS, frontend by the Nginx web server
