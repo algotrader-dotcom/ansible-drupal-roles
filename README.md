@@ -1,5 +1,5 @@
 # Drupal+Nginx+PHP-FPM Deployment
-
+This ansible repo is derived & improved from https://github.com/axai-mx/ansible-drupal-roles
 - Requires Ansible 1.8 or newer
 - Expects Ubuntu 14.04 or CentOS/RedHat 6.5 hosts
 - If using vagrant with ubuntu you need to `apt-get install nfs-kernel-server`
