@@ -1,3 +1,5 @@
+https://github.com/thuannvn/ansible-drupal-roles/blob/master/roles/mysql/scripts/mysql_pwd_reset.sh
+
 # Drupal+Nginx+PHP-FPM Deployment
 This ansible repo is derived & fixed mysql roles from https://github.com/axai-mx/ansible-drupal-roles
 - Requires Ansible 1.8 or newer
